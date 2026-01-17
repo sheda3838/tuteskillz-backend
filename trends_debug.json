@@ -1,0 +1,53 @@
+{
+  "trends": [
+    {
+      "dayIdx": 1,
+      "sessionCount": 6
+    },
+    {
+      "dayIdx": 5,
+      "sessionCount": 1
+    },
+    {
+      "dayIdx": 6,
+      "sessionCount": 1
+    }
+  ],
+  "sessions": [
+    {
+      "date": "2026-01-01T18:30:00.000Z",
+      "sessionStatus": "Completed"
+    },
+    {
+      "date": "2026-01-03T18:30:00.000Z",
+      "sessionStatus": "Completed"
+    },
+    {
+      "date": "2026-01-03T18:30:00.000Z",
+      "sessionStatus": "Completed"
+    },
+    {
+      "date": "2026-01-03T18:30:00.000Z",
+      "sessionStatus": "Completed"
+    },
+    {
+      "date": "2026-01-03T18:30:00.000Z",
+      "sessionStatus": "Completed"
+    },
+    {
+      "date": "2026-01-03T18:30:00.000Z",
+      "sessionStatus": "Completed"
+    },
+    {
+      "date": "2026-01-03T18:30:00.000Z",
+      "sessionStatus": "Completed"
+    },
+    {
+      "date": "2026-01-07T18:30:00.000Z",
+      "sessionStatus": "Completed"
+    }
+  ],
+  "curdate": {
+    "CURDATE()": "2026-01-16T18:30:00.000Z"
+  }
+}

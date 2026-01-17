@@ -1,0 +1,42 @@
+{
+  "sessionStatuses": [
+    {
+      "sessionStatus": "Completed",
+      "count": 12
+    }
+  ],
+  "student3Sessions": [
+    {
+      "date": "2026-01-01T18:30:00.000Z",
+      "sessionStatus": "Completed"
+    },
+    {
+      "date": "2026-01-03T18:30:00.000Z",
+      "sessionStatus": "Completed"
+    },
+    {
+      "date": "2026-01-03T18:30:00.000Z",
+      "sessionStatus": "Completed"
+    },
+    {
+      "date": "2026-01-03T18:30:00.000Z",
+      "sessionStatus": "Completed"
+    },
+    {
+      "date": "2026-01-03T18:30:00.000Z",
+      "sessionStatus": "Completed"
+    },
+    {
+      "date": "2026-01-03T18:30:00.000Z",
+      "sessionStatus": "Completed"
+    },
+    {
+      "date": "2026-01-03T18:30:00.000Z",
+      "sessionStatus": "Completed"
+    },
+    {
+      "date": "2026-01-07T18:30:00.000Z",
+      "sessionStatus": "Completed"
+    }
+  ]
+}

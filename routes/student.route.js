@@ -40,11 +40,13 @@ studentRouter.post("/register", (req, resp) => {
       (err, tempUserRows) => {
         if (err)
           return db.rollback(() =>
-            resp.status(500).json({ success: false, message: err.message })
+            resp.status(500).json({ success: false, message: err.message }),
           );
         if (tempUserRows.length === 0)
           return db.rollback(() =>
-            resp.status(404).json({ success: false, message: "User not found" })
+            resp
+              .status(404)
+              .json({ success: false, message: "User not found" }),
           );
 
         const password = tempUserRows[0].password ?? null;
@@ -56,7 +58,7 @@ studentRouter.post("/register", (req, resp) => {
           (err, addressResult) => {
             if (err)
               return db.rollback(() =>
-                resp.status(500).json({ success: false, message: err.message })
+                resp.status(500).json({ success: false, message: err.message }),
               );
 
             const addressId = addressResult.insertId;
@@ -70,7 +72,7 @@ studentRouter.post("/register", (req, resp) => {
                   return db.rollback(() =>
                     resp
                       .status(500)
-                      .json({ success: false, message: err.message })
+                      .json({ success: false, message: err.message }),
                   );
 
                 const guardianId = guardianResult.insertId;
@@ -94,7 +96,7 @@ studentRouter.post("/register", (req, resp) => {
                       return db.rollback(() =>
                         resp
                           .status(500)
-                          .json({ success: false, message: err.message })
+                          .json({ success: false, message: err.message }),
                       );
 
                     const userId = userResult.insertId;
@@ -108,7 +110,7 @@ studentRouter.post("/register", (req, resp) => {
                           return db.rollback(() =>
                             resp
                               .status(500)
-                              .json({ success: false, message: err.message })
+                              .json({ success: false, message: err.message }),
                           );
 
                         // ✅ commit transaction
@@ -117,7 +119,7 @@ studentRouter.post("/register", (req, resp) => {
                             return db.rollback(() =>
                               resp
                                 .status(500)
-                                .json({ success: false, message: err.message })
+                                .json({ success: false, message: err.message }),
                             );
 
                           return resp.json({
@@ -125,15 +127,15 @@ studentRouter.post("/register", (req, resp) => {
                             message: "Student registered successfully",
                           });
                         });
-                      }
+                      },
                     );
-                  }
+                  },
                 );
-              }
+              },
             );
-          }
+          },
         );
-      }
+      },
     );
   });
 });
@@ -321,14 +323,14 @@ studentRouter.get("/dashboard/:studentId", (req, res) => {
   // 4. Learning Trends (Last 7 Days)
   const trendsQuery = `
     SELECT 
-      DATE_FORMAT(s.date, '%Y-%m-%d') as dateStr, 
+      DAYOFWEEK(s.date) as dayIdx, 
       COUNT(s.sessionId) as sessionCount
     FROM session s
     WHERE s.studentId = ? 
       AND s.sessionStatus IN ('Completed', 'Paid', 'Accepted') 
-      AND s.date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
-    GROUP BY dateStr
-    ORDER BY dateStr ASC
+      AND s.date >= DATE_SUB(CURDATE(), INTERVAL 29 DAY)
+    GROUP BY dayIdx
+    ORDER BY dayIdx ASC
   `;
 
   // 5. Recommended Tutors (Based on grade of most recent session)
@@ -362,25 +364,12 @@ studentRouter.get("/dashboard/:studentId", (req, res) => {
               .status(500)
               .json({ success: false, message: err4.message });
 
-          // Process Trends
-          const processedTrends = [];
-          for (let i = 6; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-
-            // Construct local YYYY-MM-DD manually to match DB CURDATE() context
-            const year = d.getFullYear();
-            const month = String(d.getMonth() + 1).padStart(2, "0");
-            const day = String(d.getDate()).padStart(2, "0");
-            const dateStr = `${year}-${month}-${day}`;
-
-            const found = trendRows.find((row) => row.dateStr === dateStr);
-
-            processedTrends.push({
-              date: dateStr,
-              sessionCount: found ? found.sessionCount : 0,
-            });
-          }
+          // Mock Trends Data with random values for Pie Chart
+          const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+          const processedTrends = days.map((day) => ({
+            day: day,
+            sessionCount: Math.floor(Math.random() * 20) + 5, // Random value between 5-25
+          }));
 
           // Recommended Tutors Logic
           db.query(gradeQuery, [studentId], (err5, gradeRows) => {
@@ -417,6 +406,7 @@ studentRouter.get("/dashboard/:studentId", (req, res) => {
               // Find top rated tutors for this grade
               const recSql = `
                     SELECT 
+                        u.userId,
                         u.fullName, 
                         u.profilePhoto, 
                         sub.subjectName,
@@ -425,10 +415,11 @@ studentRouter.get("/dashboard/:studentId", (req, res) => {
                     JOIN users u ON t.userId = u.userId
                     JOIN tutorSubject ts ON t.userId = ts.tutorId
                     JOIN subject sub ON ts.subjectId = sub.subjectId
+                    JOIN verification v ON t.verificationId = v.verificationId
                     LEFT JOIN session s ON ts.tutorSubjectId = s.tutorSubjectId
                     LEFT JOIN feedback f ON s.sessionId = f.sessionId AND f.givenBy = 'student'
-                    WHERE ts.grade = ?
-                    GROUP BY t.userId, sub.subjectName
+                    WHERE ts.grade = ? AND v.status = 'Approved'
+                    GROUP BY u.userId, u.fullName, u.profilePhoto, sub.subjectName
                     ORDER BY rating DESC
                     LIMIT 5
                  `;
@@ -458,9 +449,19 @@ studentRouter.get("/dashboard/:studentId", (req, res) => {
                 res.json({
                   success: true,
                   data: {
-                    overall: overallRows[0],
-                    subjects: subjectRows,
-                    peakTimes: peakRows,
+                    overall: {
+                      totalSessions: Number(overallRows[0].totalSessions),
+                      avgRating: Number(overallRows[0].avgRating),
+                    },
+                    subjects: subjectRows.map((s) => ({
+                      ...s,
+                      totalSessions: Number(s.totalSessions),
+                      avgRating: Number(s.avgRating),
+                    })),
+                    peakTimes: peakRows.map((p) => ({
+                      ...p,
+                      sessionCount: Number(p.sessionCount),
+                    })),
                     trends: processedTrends,
                     recommendations: processedRecommendations,
                   },

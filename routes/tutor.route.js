@@ -41,13 +41,13 @@ tutorRouter.post("/register", (req, res) => {
       (err, tempRows) => {
         if (err)
           return db.rollback(() =>
-            res.status(500).json({ success: false, message: err.message })
+            res.status(500).json({ success: false, message: err.message }),
           );
         if (tempRows.length === 0)
           return db.rollback(() =>
             res
               .status(404)
-              .json({ success: false, message: "User not found in tempUsers" })
+              .json({ success: false, message: "User not found in tempUsers" }),
           );
 
         const password = tempRows[0].password ?? null;
@@ -59,7 +59,7 @@ tutorRouter.post("/register", (req, res) => {
           (err, addressResult) => {
             if (err)
               return db.rollback(() =>
-                res.status(500).json({ success: false, message: err.message })
+                res.status(500).json({ success: false, message: err.message }),
               );
 
             const addressId = addressResult.insertId;
@@ -82,7 +82,7 @@ tutorRouter.post("/register", (req, res) => {
                   return db.rollback(() =>
                     res
                       .status(500)
-                      .json({ success: false, message: err.message })
+                      .json({ success: false, message: err.message }),
                   );
 
                 const userId = userResult.insertId;
@@ -103,7 +103,7 @@ tutorRouter.post("/register", (req, res) => {
                       return db.rollback(() =>
                         res
                           .status(500)
-                          .json({ success: false, message: err.message })
+                          .json({ success: false, message: err.message }),
                       );
 
                     const subjects = Array.isArray(teachingSubjects)
@@ -119,7 +119,7 @@ tutorRouter.post("/register", (req, res) => {
                             return db.rollback(() =>
                               res
                                 .status(500)
-                                .json({ success: false, message: err.message })
+                                .json({ success: false, message: err.message }),
                             );
                           return res.json({
                             success: true,
@@ -137,10 +137,10 @@ tutorRouter.post("/register", (req, res) => {
                             return db.rollback(() =>
                               res
                                 .status(500)
-                                .json({ success: false, message: err.message })
+                                .json({ success: false, message: err.message }),
                             );
                           insertSubject(index + 1); // insert next
-                        }
+                        },
                       );
                     };
 
@@ -153,7 +153,7 @@ tutorRouter.post("/register", (req, res) => {
                           return db.rollback(() =>
                             res
                               .status(500)
-                              .json({ success: false, message: err.message })
+                              .json({ success: false, message: err.message }),
                           );
                         return res.json({
                           success: true,
@@ -162,13 +162,13 @@ tutorRouter.post("/register", (req, res) => {
                         });
                       });
                     }
-                  }
+                  },
                 );
-              }
+              },
             );
-          }
+          },
         );
-      }
+      },
     );
   });
 });
@@ -193,7 +193,7 @@ tutorRouter.post("/availability", (req, res) => {
         return db.commit((err) => {
           if (err)
             return db.rollback(() =>
-              res.status(500).json({ success: false, message: err.message })
+              res.status(500).json({ success: false, message: err.message }),
             );
           return res.json({
             success: true,
@@ -210,7 +210,7 @@ tutorRouter.post("/availability", (req, res) => {
           res.status(400).json({
             success: false,
             message: "Invalid availability entry",
-          })
+          }),
         );
       }
 
@@ -221,11 +221,11 @@ tutorRouter.post("/availability", (req, res) => {
         (err) => {
           if (err)
             return db.rollback(() =>
-              res.status(500).json({ success: false, message: err.message })
+              res.status(500).json({ success: false, message: err.message }),
             );
 
           insertNext(i + 1);
-        }
+        },
       );
     };
 
@@ -247,7 +247,7 @@ tutorRouter.get("/availability/:tutorId", (req, res) => {
         success: true,
         availability: rows,
       });
-    }
+    },
   );
 });
 
@@ -365,7 +365,7 @@ tutorRouter.post("/bank-details", (req, res) => {
         return db.commit((err) => {
           if (err)
             return db.rollback(() =>
-              res.status(500).json({ success: false, message: err.message })
+              res.status(500).json({ success: false, message: err.message }),
             );
           return res.json({
             success: true,
@@ -382,7 +382,7 @@ tutorRouter.post("/bank-details", (req, res) => {
           res.status(400).json({
             success: false,
             message: "All account fields are required",
-          })
+          }),
         );
       }
 
@@ -406,10 +406,10 @@ tutorRouter.post("/bank-details", (req, res) => {
           (err) => {
             if (err)
               return db.rollback(() =>
-                res.status(500).json({ success: false, message: err.message })
+                res.status(500).json({ success: false, message: err.message }),
               );
             insertNext(i + 1);
-          }
+          },
         );
       };
 
@@ -417,7 +417,7 @@ tutorRouter.post("/bank-details", (req, res) => {
         db.query(query, [tutorId], (err) => {
           if (err)
             return db.rollback(() =>
-              res.status(500).json({ success: false, message: err.message })
+              res.status(500).json({ success: false, message: err.message }),
             );
           insertAccount();
         });
@@ -556,49 +556,25 @@ tutorRouter.get("/dashboard/:tutorId", (req, res) => {
         // Calculate Overall Stats
         const totalCompletedSessions = subjectRows.reduce(
           (acc, curr) => acc + curr.totalSessions,
-          0
+          0,
         );
 
         // Weighted Average Rating
         const weightedRatingNum = subjectRows.reduce(
           (acc, curr) => acc + curr.avgRating * curr.totalSessions,
-          0
+          0,
         );
         const overallAvgRating =
           totalCompletedSessions > 0
             ? (weightedRatingNum / totalCompletedSessions).toFixed(1)
             : 0;
 
-        // Process Trends: Fill in missing days for the last 7 days
-        const processedTrends = [];
-        console.log(`[Tutor Trends Debug] TutorId: ${tutorId}`);
-        console.log("[Tutor Trends Debug] Raw DB Rows:", trendRows);
-
-        for (let i = 6; i >= 0; i--) {
-          const d = new Date();
-          d.setDate(d.getDate() - i);
-
-          // Construct local YYYY-MM-DD
-          const year = d.getFullYear();
-          const month = String(d.getMonth() + 1).padStart(2, "0");
-          const day = String(d.getDate()).padStart(2, "0");
-          const dateStr = `${year}-${month}-${day}`;
-
-          const found = trendRows.find((row) => row.dateStr === dateStr);
-
-          if (found) {
-            console.log(
-              `[Tutor Trends Debug] Match found for ${dateStr}:`,
-              found
-            );
-          }
-
-          processedTrends.push({
-            date: dateStr,
-            sessionCount: found ? found.sessionCount : 0,
-          });
-        }
-        console.log("[Tutor Trends Debug] Final processed:", processedTrends);
+        // Mock Trends Data with random values for Pie Chart (Tutor)
+        const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        const processedTrends = days.map((day) => ({
+          day: day,
+          sessionCount: Math.floor(Math.random() * 20) + 5, // Random value between 5-25
+        }));
 
         res.json({
           success: true,

@@ -1,0 +1,42 @@
+{
+  "studentId": 3,
+  "gradeFound": 7,
+  "recsCount": 5,
+  "recs": [
+    {
+      "userId": 2,
+      "fullName": "John Doe",
+      "profilePhoto": "EXISTS",
+      "subjectName": "Geography",
+      "rating": "4.3333"
+    },
+    {
+      "userId": 9,
+      "fullName": "Sajad Raja",
+      "profilePhoto": "EXISTS",
+      "subjectName": "Science",
+      "rating": "3.0000"
+    },
+    {
+      "userId": 11,
+      "fullName": "Smrithi Mandana",
+      "profilePhoto": "EXISTS",
+      "subjectName": "Science",
+      "rating": "3.0000"
+    },
+    {
+      "userId": 13,
+      "fullName": "Steve Smith",
+      "profilePhoto": "EXISTS",
+      "subjectName": "Science",
+      "rating": "0.0000"
+    },
+    {
+      "userId": 2,
+      "fullName": "John Doe",
+      "profilePhoto": "EXISTS",
+      "subjectName": "Commerce",
+      "rating": "0.0000"
+    }
+  ]
+}

@@ -1,0 +1,160 @@
+{
+  "sessions": [
+    {
+      "date": "2026-01-07T18:30:00.000Z",
+      "studentId": 3
+    },
+    {
+      "date": "2026-01-03T18:30:00.000Z",
+      "studentId": 3
+    },
+    {
+      "date": "2026-01-03T18:30:00.000Z",
+      "studentId": 3
+    },
+    {
+      "date": "2026-01-03T18:30:00.000Z",
+      "studentId": 4
+    },
+    {
+      "date": "2026-01-03T18:30:00.000Z",
+      "studentId": 4
+    },
+    {
+      "date": "2026-01-03T18:30:00.000Z",
+      "studentId": 7
+    },
+    {
+      "date": "2026-01-03T18:30:00.000Z",
+      "studentId": 6
+    },
+    {
+      "date": "2026-01-03T18:30:00.000Z",
+      "studentId": 3
+    },
+    {
+      "date": "2026-01-03T18:30:00.000Z",
+      "studentId": 3
+    },
+    {
+      "date": "2026-01-03T18:30:00.000Z",
+      "studentId": 3
+    },
+    {
+      "date": "2026-01-03T18:30:00.000Z",
+      "studentId": 3
+    },
+    {
+      "date": "2026-01-01T18:30:00.000Z",
+      "studentId": 3
+    }
+  ],
+  "tutors": [
+    {
+      "userId": 2,
+      "grade": 6
+    },
+    {
+      "userId": 2,
+      "grade": 7
+    },
+    {
+      "userId": 2,
+      "grade": 7
+    },
+    {
+      "userId": 2,
+      "grade": 6
+    },
+    {
+      "userId": 2,
+      "grade": 9
+    },
+    {
+      "userId": 2,
+      "grade": 8
+    },
+    {
+      "userId": 9,
+      "grade": 6
+    },
+    {
+      "userId": 9,
+      "grade": 7
+    },
+    {
+      "userId": 9,
+      "grade": 8
+    },
+    {
+      "userId": 10,
+      "grade": 6
+    },
+    {
+      "userId": 10,
+      "grade": 7
+    },
+    {
+      "userId": 10,
+      "grade": 8
+    },
+    {
+      "userId": 11,
+      "grade": 6
+    },
+    {
+      "userId": 11,
+      "grade": 7
+    },
+    {
+      "userId": 11,
+      "grade": 8
+    },
+    {
+      "userId": 12,
+      "grade": 6
+    },
+    {
+      "userId": 12,
+      "grade": 7
+    },
+    {
+      "userId": 12,
+      "grade": 8
+    },
+    {
+      "userId": 13,
+      "grade": 6
+    },
+    {
+      "userId": 13,
+      "grade": 7
+    }
+  ],
+  "students": [
+    {
+      "userId": 3,
+      "grade": 6
+    },
+    {
+      "userId": 4,
+      "grade": 9
+    },
+    {
+      "userId": 5,
+      "grade": 6
+    },
+    {
+      "userId": 6,
+      "grade": 8
+    },
+    {
+      "userId": 7,
+      "grade": 6
+    },
+    {
+      "userId": 8,
+      "grade": 7
+    }
+  ]
+}
