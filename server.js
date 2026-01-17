@@ -73,3 +73,13 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+app.get("/db-test", async (req, res) => {
+  db.query("SELECT 1 + 1 AS result", (err, results) => {
+    if (err) {
+      console.error("DB Error:", err);
+      return res.status(500).send("DB connection failed");
+    }
+    res.send(`DB connected successfully: 1 + 1 = ${results[0].result}`);
+  });
+});
