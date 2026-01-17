@@ -34,7 +34,7 @@ app.set("trust proxy", true);
 const MySQLSessionStore = MySQLStore(session);
 const sessionStore = new MySQLSessionStore({}, db.promise());
 
-//Using sessions 
+//Using sessions
 app.use(
   session({
     secret: process.env.SECRET_KEY,
@@ -42,9 +42,9 @@ app.use(
     saveUninitialized: false,
     store: sessionStore,
     cookie: {
-      secure: true, // MUST be true on Railway
+      secure: process.env.NODE_ENV === "production", // Only true on PRODUCTION (Railway/Vercel)
       httpOnly: true,
-      sameSite: "none", // REQUIRED for cross-site cookies
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // none for cross-site (Railway), lax for local
       maxAge: 1000 * 60 * 60 * 24,
     },
   }),

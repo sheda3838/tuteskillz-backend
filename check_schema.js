@@ -1,14 +1,13 @@
 import db from "./config/db.js";
 
-const checkTable = () => {
-  db.query("DESCRIBE feedback", (err, result) => {
-    if (err) {
-      console.error("Error describing feedback table:", err);
-    } else {
-      console.log("Feedback Table Schema:", result);
-    }
-    process.exit();
-  });
-};
-
-checkTable();
+async function check() {
+  try {
+    const [rows] = await db.promise().query("DESCRIBE verification");
+    console.log("FIELDS IN verification:");
+    rows.forEach((r) => console.log(r.Field));
+  } catch (err) {
+    console.error(err);
+  }
+  process.exit();
+}
+check();

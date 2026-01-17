@@ -146,7 +146,7 @@ adminRouter.get("/counts", (req, resp) => {
       (SELECT COUNT(*) FROM users WHERE role = 'tutor') AS tutorCount,
       (SELECT COUNT(*) FROM users WHERE role = 'student') AS studentCount,
       (SELECT COUNT(*) FROM users WHERE role = 'admin') AS adminCount,
-      (SELECT COUNT(*) FROM session WHERE sessionStatus = 'completed') AS sessionCount,
+      (SELECT COUNT(*) FROM session WHERE sessionStatus = 'Completed') AS sessionCount,
       (SELECT COUNT(*) FROM notes) AS notesCount
   `;
 
@@ -219,7 +219,7 @@ adminRouter.post("/tutor/save-results/:tutorId/:examType", (req, res) => {
       (err) => {
         if (err)
           return db.rollback(() =>
-            res.status(500).json({ success: false, message: err.message })
+            res.status(500).json({ success: false, message: err.message }),
           );
 
         const insertNext = (index) => {
@@ -227,7 +227,9 @@ adminRouter.post("/tutor/save-results/:tutorId/:examType", (req, res) => {
             return db.commit((err) => {
               if (err)
                 return db.rollback(() =>
-                  res.status(500).json({ success: false, message: err.message })
+                  res
+                    .status(500)
+                    .json({ success: false, message: err.message }),
                 );
               return res.json({
                 success: true,
@@ -247,7 +249,9 @@ adminRouter.post("/tutor/save-results/:tutorId/:examType", (req, res) => {
             (err, rows) => {
               if (err)
                 return db.rollback(() =>
-                  res.status(500).json({ success: false, message: err.message })
+                  res
+                    .status(500)
+                    .json({ success: false, message: err.message }),
                 );
 
               const insertExamResult = (subjectId) => {
@@ -259,10 +263,10 @@ adminRouter.post("/tutor/save-results/:tutorId/:examType", (req, res) => {
                       return db.rollback(() =>
                         res
                           .status(500)
-                          .json({ success: false, message: err.message })
+                          .json({ success: false, message: err.message }),
                       );
                     insertNext(index + 1);
-                  }
+                  },
                 );
               };
 
@@ -277,18 +281,18 @@ adminRouter.post("/tutor/save-results/:tutorId/:examType", (req, res) => {
                       return db.rollback(() =>
                         res
                           .status(500)
-                          .json({ success: false, message: err.message })
+                          .json({ success: false, message: err.message }),
                       );
                     insertExamResult(result.insertId);
-                  }
+                  },
                 );
               }
-            }
+            },
           );
         };
 
         insertNext(0); // start recursion
-      }
+      },
     );
   });
 });
@@ -312,7 +316,7 @@ adminRouter.post("/tutor/approve/:tutorId", (req, res) => {
       (err, verResult) => {
         if (err)
           return db.rollback(() =>
-            res.status(500).json({ success: false, message: err.message })
+            res.status(500).json({ success: false, message: err.message }),
           );
 
         const verificationId = verResult.insertId;
@@ -323,13 +327,15 @@ adminRouter.post("/tutor/approve/:tutorId", (req, res) => {
           async (err) => {
             if (err)
               return db.rollback(() =>
-                res.status(500).json({ success: false, message: err.message })
+                res.status(500).json({ success: false, message: err.message }),
               );
 
             db.commit(async (err) => {
               if (err)
                 return db.rollback(() =>
-                  res.status(500).json({ success: false, message: err.message })
+                  res
+                    .status(500)
+                    .json({ success: false, message: err.message }),
                 );
 
               // ✅ Fetch tutor email
@@ -356,7 +362,7 @@ adminRouter.post("/tutor/approve/:tutorId", (req, res) => {
                   await sendEmail(
                     tutorEmail,
                     "Tutor Application Approved",
-                    emailHtml
+                    emailHtml,
                   );
                 }
               } catch (emailErr) {
@@ -369,9 +375,9 @@ adminRouter.post("/tutor/approve/:tutorId", (req, res) => {
                 verificationId,
               });
             });
-          }
+          },
         );
-      }
+      },
     );
   });
 });
@@ -399,7 +405,7 @@ adminRouter.post("/reject-tutor/:tutorId", (req, res) => {
       (err, verResult) => {
         if (err)
           return db.rollback(() =>
-            res.status(500).json({ success: false, message: err.message })
+            res.status(500).json({ success: false, message: err.message }),
           );
 
         const verificationId = verResult.insertId;
@@ -411,13 +417,15 @@ adminRouter.post("/reject-tutor/:tutorId", (req, res) => {
           (err) => {
             if (err)
               return db.rollback(() =>
-                res.status(500).json({ success: false, message: err.message })
+                res.status(500).json({ success: false, message: err.message }),
               );
 
             db.commit((err) => {
               if (err)
                 return db.rollback(() =>
-                  res.status(500).json({ success: false, message: err.message })
+                  res
+                    .status(500)
+                    .json({ success: false, message: err.message }),
                 );
 
               // Fetch tutor email and send rejection email
@@ -437,7 +445,7 @@ adminRouter.post("/reject-tutor/:tutorId", (req, res) => {
                     sendEmail(
                       tutorEmail,
                       "Tutor Application Rejected",
-                      emailHtml
+                      emailHtml,
                     );
                   }
                   // Return response regardless of email success/failure
@@ -446,12 +454,12 @@ adminRouter.post("/reject-tutor/:tutorId", (req, res) => {
                     message: "Tutor rejected successfully",
                     verificationId,
                   });
-                }
+                },
               );
             });
-          }
+          },
         );
-      }
+      },
     );
   });
 });
@@ -476,7 +484,7 @@ adminRouter.get("/reports/best-tutors", (req, res) => {
     LEFT JOIN tutorSubject ts ON t.userId = ts.tutorId
     LEFT JOIN session s ON ts.tutorSubjectId = s.tutorSubjectId AND s.sessionStatus = 'Completed'
     LEFT JOIN feedback f ON s.sessionId = f.sessionId AND f.givenBy = 'student'
-    GROUP BY t.userId
+    GROUP BY u.userId, u.fullName, u.profilePhoto, u.email
     ORDER BY rankScore DESC
     LIMIT 5;
   `;
@@ -503,7 +511,7 @@ adminRouter.get("/reports/top-revenue-tutors", (req, res) => {
     JOIN users u ON t.userId = u.userId
     WHERE p.paymentStatus = 'Paid' 
       AND p.paidAt >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-    GROUP BY t.userId
+    GROUP BY u.userId, u.fullName, u.profilePhoto
     ORDER BY totalRevenue DESC
     LIMIT 5;
   `;
@@ -527,7 +535,7 @@ adminRouter.get("/reports/top-subject-revenue", (req, res) => {
     JOIN subject sub ON ts.subjectId = sub.subjectId
     WHERE p.paymentStatus = 'Paid' 
       AND p.paidAt >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-    GROUP BY sub.subjectId
+    GROUP BY sub.subjectId, sub.subjectName
     ORDER BY totalRevenue DESC
     LIMIT 5;
   `;
@@ -554,7 +562,7 @@ adminRouter.get("/reports/most-active-students", (req, res) => {
     JOIN session s ON st.userId = s.studentId
     LEFT JOIN feedback f ON s.sessionId = f.sessionId AND f.givenBy = 'student'
     WHERE s.sessionStatus IN ('Completed', 'Paid', 'Accepted')
-    GROUP BY st.userId
+    GROUP BY u.userId, u.fullName, u.profilePhoto, u.email
     ORDER BY sessionsJoined DESC
     LIMIT 5;
   `;
@@ -577,7 +585,7 @@ adminRouter.get("/reports/admin-workload", (req, res) => {
     FROM admin a
     JOIN users u ON a.userId = u.userId
     LEFT JOIN verification v ON a.userId = v.verifiedByAdminId
-    GROUP BY a.userId
+    GROUP BY u.userId, u.fullName, u.profilePhoto
     ORDER BY verificationsHandled DESC;
   `;
 
