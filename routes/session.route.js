@@ -15,7 +15,7 @@ sessionRouter.post("/request", (req, res) => {
       message: "All required fields must be provided",
     });
   }
-
+  
   const sql = `
     INSERT INTO session 
       (tutorSubjectId, studentId, date, startTime, duration, studentNote, sessionStatus)
