@@ -596,4 +596,124 @@ adminRouter.get("/reports/admin-workload", (req, res) => {
   });
 });
 
+// 6. Weekly Ratings & Feedback Analytics
+adminRouter.get("/reports/weekly-feedback-analytics", (req, res) => {
+  // Common time filter: Last 7 days
+  const TIME_FILTER = "s.date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)";
+
+  // A. Lowest Rated Tutor
+  const lowestTutorQuery = `
+    SELECT 
+      u.fullName,
+      u.email,
+      IFNULL(AVG(f.rating), 0) as avgRating,
+      COUNT(s.sessionId) as count
+    FROM tutor t
+    JOIN users u ON t.userId = u.userId
+    JOIN tutorSubject ts ON t.userId = ts.tutorId
+    JOIN session s ON ts.tutorSubjectId = s.tutorSubjectId
+    JOIN feedback f ON s.sessionId = f.sessionId AND f.givenBy = 'student'
+    WHERE ${TIME_FILTER} 
+      AND s.sessionStatus = 'Completed'
+    GROUP BY t.userId, u.fullName, u.email
+    HAVING avgRating > 0
+    ORDER BY avgRating ASC
+    LIMIT 1
+  `;
+
+  // B. Lowest Rated Subject
+  const lowestSubjectQuery = `
+    SELECT 
+      sub.subjectName,
+      IFNULL(AVG(f.rating), 0) as avgRating,
+      COUNT(s.sessionId) as count
+    FROM subject sub
+    JOIN tutorSubject ts ON sub.subjectId = ts.subjectId
+    JOIN session s ON ts.tutorSubjectId = s.tutorSubjectId
+    JOIN feedback f ON s.sessionId = f.sessionId AND f.givenBy = 'student'
+    WHERE ${TIME_FILTER}
+      AND s.sessionStatus = 'Completed'
+    GROUP BY sub.subjectId, sub.subjectName
+    HAVING avgRating > 0
+    ORDER BY avgRating ASC
+    LIMIT 1
+  `;
+
+  // C. Lowest Rated Session (Single worst session)
+  const lowestSessionQuery = `
+    SELECT 
+      s.sessionId,
+      u.fullName as tutorName,
+      sub.subjectName,
+      f.rating,
+      f.comments
+    FROM session s
+    JOIN tutorSubject ts ON s.tutorSubjectId = ts.tutorSubjectId
+    JOIN tutor t ON ts.tutorId = t.userId
+    JOIN users u ON t.userId = u.userId
+    JOIN subject sub ON ts.subjectId = sub.subjectId
+    JOIN feedback f ON s.sessionId = f.sessionId AND f.givenBy = 'student'
+    WHERE ${TIME_FILTER}
+      AND s.sessionStatus = 'Completed'
+    ORDER BY f.rating ASC
+    LIMIT 1
+  `;
+
+  // D. Recent Negative Feedback (Rating <= 3)
+  const negativeFeedbackQuery = `
+    SELECT 
+      s.sessionId,
+      u.fullName as tutorName,
+      sub.subjectName,
+      f.rating,
+      f.comments,
+      s.date
+    FROM session s
+    JOIN tutorSubject ts ON s.tutorSubjectId = ts.tutorSubjectId
+    JOIN tutor t ON ts.tutorId = t.userId
+    JOIN users u ON t.userId = u.userId
+    JOIN subject sub ON ts.subjectId = sub.subjectId
+    JOIN feedback f ON s.sessionId = f.sessionId AND f.givenBy = 'student'
+    WHERE ${TIME_FILTER}
+      AND s.sessionStatus = 'Completed'
+      AND f.rating <= 3
+    ORDER BY s.date DESC, s.startTime DESC
+    LIMIT 5
+  `;
+
+  db.query(lowestTutorQuery, (err1, tutorRows) => {
+    if (err1)
+      return res.status(500).json({ success: false, message: err1.message });
+
+    db.query(lowestSubjectQuery, (err2, subjectRows) => {
+      if (err2)
+        return res.status(500).json({ success: false, message: err2.message });
+
+      db.query(lowestSessionQuery, (err3, sessionRows) => {
+        if (err3)
+          return res
+            .status(500)
+            .json({ success: false, message: err3.message });
+
+        db.query(negativeFeedbackQuery, (err4, feedbackRows) => {
+          if (err4)
+            return res
+              .status(500)
+              .json({ success: false, message: err4.message });
+
+          res.json({
+            success: true,
+            data: {
+              lowestTutor: tutorRows[0] || null,
+              lowestSubject: subjectRows[0] || null,
+              lowestSession: sessionRows[0] || null,
+              negativeFeedback: feedbackRows || [],
+            },
+          });
+        });
+      });
+    });
+  });
+});
+
 export default adminRouter;
