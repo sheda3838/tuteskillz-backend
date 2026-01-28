@@ -539,6 +539,23 @@ tutorRouter.get("/dashboard/:tutorId", (req, res) => {
     LIMIT 5
   `;
 
+  // 4. Detailed Feedback Analytics
+  const feedbackQuery = `
+    SELECT 
+      sub.subjectName,
+      s.sessionId,
+      s.date,
+      s.startTime,
+      f.rating,
+      f.comments
+    FROM session s
+    JOIN tutorSubject ts ON s.tutorSubjectId = ts.tutorSubjectId
+    JOIN subject sub ON ts.subjectId = sub.subjectId
+    JOIN feedback f ON s.sessionId = f.sessionId AND f.givenBy = 'student'
+    WHERE ts.tutorId = ? AND s.sessionStatus = 'Completed'
+    ORDER BY s.date DESC, s.startTime DESC
+  `;
+
   db.query(subjectQuery, [tutorId], (err, subjectRows) => {
     if (err)
       return res.status(500).json({ success: false, message: err.message });
@@ -553,40 +570,63 @@ tutorRouter.get("/dashboard/:tutorId", (req, res) => {
             .status(500)
             .json({ success: false, message: err3.message });
 
-        // Calculate Overall Stats
-        const totalCompletedSessions = subjectRows.reduce(
-          (acc, curr) => acc + curr.totalSessions,
-          0,
-        );
+        db.query(feedbackQuery, [tutorId], (err4, feedbackRows) => {
+          if (err4)
+            return res
+              .status(500)
+              .json({ success: false, message: err4.message });
 
-        // Weighted Average Rating
-        const weightedRatingNum = subjectRows.reduce(
-          (acc, curr) => acc + curr.avgRating * curr.totalSessions,
-          0,
-        );
-        const overallAvgRating =
-          totalCompletedSessions > 0
-            ? (weightedRatingNum / totalCompletedSessions).toFixed(1)
-            : 0;
+          // Calculate Overall Stats
+          const totalCompletedSessions = subjectRows.reduce(
+            (acc, curr) => acc + curr.totalSessions,
+            0,
+          );
 
-        // Mock Trends Data with random values for Pie Chart (Tutor)
-        const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-        const processedTrends = days.map((day) => ({
-          day: day,
-          sessionCount: Math.floor(Math.random() * 20) + 5, // Random value between 5-25
-        }));
+          // Weighted Average Rating
+          const weightedRatingNum = subjectRows.reduce(
+            (acc, curr) => acc + curr.avgRating * curr.totalSessions,
+            0,
+          );
+          const overallAvgRating =
+            totalCompletedSessions > 0
+              ? (weightedRatingNum / totalCompletedSessions).toFixed(1)
+              : 0;
 
-        res.json({
-          success: true,
-          data: {
-            overall: {
-              totalSessions: totalCompletedSessions,
-              avgRating: overallAvgRating,
+          // Group feedback by subject
+          const feedbackBySubject = {};
+          feedbackRows.forEach((row) => {
+            if (!feedbackBySubject[row.subjectName]) {
+              feedbackBySubject[row.subjectName] = [];
+            }
+            feedbackBySubject[row.subjectName].push({
+              sessionId: row.sessionId,
+              date: row.date,
+              startTime: row.startTime,
+              rating: row.rating,
+              comment: row.comments,
+            });
+          });
+
+          // Mock Trends Data with random values for Pie Chart (Tutor)
+          const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+          const processedTrends = days.map((day) => ({
+            day: day,
+            sessionCount: Math.floor(Math.random() * 20) + 5, // Random value between 5-25
+          }));
+
+          res.json({
+            success: true,
+            data: {
+              overall: {
+                totalSessions: totalCompletedSessions,
+                avgRating: overallAvgRating,
+              },
+              subjects: subjectRows,
+              trends: processedTrends,
+              peakTimes: peakRows,
+              feedbackAnalytics: feedbackBySubject,
             },
-            subjects: subjectRows,
-            trends: processedTrends,
-            peakTimes: peakRows,
-          },
+          });
         });
       });
     });
