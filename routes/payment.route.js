@@ -55,7 +55,7 @@ async function processPayment(data, resp) {
   // Debug Merchant ID
   const envMerchantId = process.env.PAYHERE_MERCHANT_ID;
   console.log(
-    `Merchant ID Check: Received '${merchant_id}' vs Env '${envMerchantId}'`
+    `Merchant ID Check: Received '${merchant_id}' vs Env '${envMerchantId}'`,
   );
 
   // Use correct App ID (loose comparison)
@@ -71,7 +71,7 @@ async function processPayment(data, resp) {
   }
 
   console.log(
-    `Payment Status Determined: ${paymentStatus} (Status Code: ${status_code})`
+    `Payment Status Determined: ${paymentStatus} (Status Code: ${status_code})`,
   );
 
   // Check if payment already exists to avoid duplicates
@@ -105,11 +105,11 @@ async function processPayment(data, resp) {
 
         // Update session status if Paid
         if (paymentStatus === "Paid") {
-          const meetingUrl = generateJitsiLink(order_id);
-          console.log("Generated Meeting URL:", meetingUrl);
+          const zoomUrl = generateJitsiLink(order_id);
+          console.log("Generated Meeting URL:", zoomUrl);
 
-          const updateSql = `UPDATE session SET sessionStatus = 'Paid', meetingUrl = ? WHERE sessionId = ?`;
-          db.query(updateSql, [meetingUrl, order_id], (err2, result2) => {
+          const updateSql = `UPDATE session SET sessionStatus = 'Paid', zoomUrl = ? WHERE sessionId = ?`;
+          db.query(updateSql, [zoomUrl, order_id], (err2, result2) => {
             if (err2) {
               console.error("❌ Session update error:", err2);
               return resp.status(500).send("Server Error");
@@ -117,7 +117,7 @@ async function processPayment(data, resp) {
 
             console.log(
               "✅ Session updated. Affected rows:",
-              result2.affectedRows
+              result2.affectedRows,
             );
 
             // Fetch tutor email to send notification
@@ -145,7 +145,7 @@ async function processPayment(data, resp) {
                   await sendEmail(
                     email,
                     "Session Payment Received - TuteSkillz",
-                    emailHtml
+                    emailHtml,
                   );
                   console.log(`Email sent to tutor: ${email}`);
                 } catch (emailErr) {
@@ -158,7 +158,7 @@ async function processPayment(data, resp) {
         } else {
           resp.status(200).send("OK");
         }
-      }
+      },
     );
   });
 }

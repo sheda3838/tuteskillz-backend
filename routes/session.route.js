@@ -34,7 +34,7 @@ sessionRouter.post("/request", (req, res) => {
         message: "Session requested successfully",
         sessionId: result.insertId,
       });
-    }
+    },
   );
 });
 
@@ -92,7 +92,8 @@ sessionRouter.get("/tutor/:tutorId/sessions", (req, res) => {
       s.startTime,
       s.duration,
       s.sessionStatus,
-      s.meetingUrl,
+      s.zoomUrl,
+      s.recordingUrl,
       s.studentNote,
       s.tutorNote,
 
@@ -212,8 +213,8 @@ sessionRouter.put("/:sessionId/status", (req, res) => {
             const emailSubject = "Session Cancelled - TuteSkillz";
             const emailBody = `
                 <p>The session scheduled for ${session.date} at ${
-              session.startTime
-            } has been cancelled.</p>
+                  session.startTime
+                } has been cancelled.</p>
                 <p><strong>Reason:</strong> ${
                   reason || "No reason provided."
                 }</p>
@@ -247,8 +248,8 @@ sessionRouter.put("/:sessionId/status", (req, res) => {
         const emailSubject = "Session Cancelled - TuteSkillz";
         const emailBody = `
           <p>The session scheduled for ${session.date} at ${
-          session.startTime
-        } has been cancelled.</p>
+            session.startTime
+          } has been cancelled.</p>
           <p><strong>Reason:</strong> ${reason || "No reason provided."}</p>
         `;
 
@@ -282,13 +283,13 @@ sessionRouter.put("/:sessionId/status", (req, res) => {
 
           if (hasCredit) {
             // Redeem Credit: Mark as Paid immediately
-            const meetingUrl = `https://meet.jit.si/session_${sessionId}_${Date.now()}`;
+            const zoomUrl = `https://meet.jit.si/session_${sessionId}_${Date.now()}`;
             const txnId = `CREDIT-${Date.now()}`;
 
             // 1. Update Session
             const updateSessionSql =
-              "UPDATE session SET sessionStatus = 'Paid', meetingUrl = ? WHERE sessionId = ?";
-            db.query(updateSessionSql, [meetingUrl, sessionId], (err4) => {
+              "UPDATE session SET sessionStatus = 'Paid', zoomUrl = ? WHERE sessionId = ?";
+            db.query(updateSessionSql, [zoomUrl, sessionId], (err4) => {
               if (err4)
                 return res
                   .status(500)
@@ -309,7 +310,7 @@ sessionRouter.put("/:sessionId/status", (req, res) => {
                   if (err6)
                     console.error(
                       "Failed to insert credit payment record",
-                      err6
+                      err6,
                     );
 
                   // Notify Student
@@ -317,7 +318,7 @@ sessionRouter.put("/:sessionId/status", (req, res) => {
                     studentEmail,
                     "Session Accepted & Credit Applied",
                     `<p>Your session has been accepted. Your free session credit was applied automatically.</p>
-                        <p>Meeting Link: <a href="${meetingUrl}">${meetingUrl}</a></p>`
+                        <p>Meeting Link: <a href="${zoomUrl}">${zoomUrl}</a></p>`,
                   );
 
                   return res.json({
@@ -343,17 +344,17 @@ sessionRouter.put("/:sessionId/status", (req, res) => {
                 await sendEmail(
                   studentEmail,
                   "Session Request Accepted",
-                  `<p>Your session request has been accepted. Please proceed to payment.</p>`
+                  `<p>Your session request has been accepted. Please proceed to payment.</p>`,
                 );
 
                 return res.json({
                   success: true,
                   message: "Session accepted successfully",
                 });
-              }
+              },
             );
           }
-        }
+        },
       );
     }
 
@@ -398,7 +399,8 @@ sessionRouter.get("/student/:studentId/sessions", (req, res) => {
       s.startTime,
       s.duration,
       s.sessionStatus,
-      s.meetingUrl,
+      s.zoomUrl,
+      s.recordingUrl,
       s.studentNote,
       s.tutorNote,
 
@@ -447,7 +449,8 @@ sessionRouter.get("/:id", (req, res) => {
   s.startTime,
   s.duration,
   s.sessionStatus,
-  s.meetingUrl,
+  s.zoomUrl,
+  s.recordingUrl,
   s.studentNote,
   s.tutorNote,
   s.studentId,
