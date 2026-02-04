@@ -191,53 +191,8 @@ sessionRouter.put("/:sessionId/status", (req, res) => {
       let updateSql =
         "UPDATE session SET sessionStatus = 'Cancelled' WHERE sessionId = ?";
       let updateParams = [sessionId];
-      let creditGiven = false;
 
-      // If Paid, give credit
-      if (session.sessionStatus === "Paid") {
-        const updateSessionSql =
-          "UPDATE session SET sessionStatus = 'Cancelled' WHERE sessionId = ?";
-        const updateStudentSql =
-          "UPDATE student SET freeSessionCredit = 1 WHERE userId = ?";
-
-        db.query(updateSessionSql, [sessionId], (err2) => {
-          if (err2)
-            return res
-              .status(500)
-              .json({ success: false, message: err2.message });
-
-          db.query(updateStudentSql, [studentId], async (err3) => {
-            if (err3) console.error("Failed to update student credit", err3); // Log but don't fail the whole request if possible, or handle better
-
-            // Send Emails
-            const emailSubject = "Session Cancelled - TuteSkillz";
-            const emailBody = `
-                <p>The session scheduled for ${session.date} at ${
-                  session.startTime
-                } has been cancelled.</p>
-                <p><strong>Reason:</strong> ${
-                  reason || "No reason provided."
-                }</p>
-                <p><strong>Note:</strong> A free session credit has been applied to the student's account.</p>
-              `;
-
-            try {
-              await sendEmail(studentEmail, emailSubject, emailBody);
-              await sendEmail(tutorEmail, emailSubject, emailBody);
-            } catch (e) {
-              console.error("Email sending failed", e);
-            }
-
-            return res.json({
-              success: true,
-              message: "Session cancelled successfully",
-            });
-          });
-        });
-        return; // Return early to avoid running the else block
-      }
-
-      // Standard Cancellation (Not Paid)
+      // Standard Cancellation
       db.query(updateSql, updateParams, async (err2) => {
         if (err2)
           return res
@@ -268,98 +223,32 @@ sessionRouter.put("/:sessionId/status", (req, res) => {
     }
 
     // --- ACCEPTANCE LOGIC (Check for Credit) ---
+    // --- ACCEPTANCE LOGIC (Standard Accept Only) ---
     else if (status === "Accepted") {
-      // Check if student has credit
-      db.query(
-        "SELECT freeSessionCredit FROM student WHERE userId = ?",
-        [studentId],
-        (err3, stuRows) => {
-          if (err3)
-            return res
-              .status(500)
-              .json({ success: false, message: err3.message });
+      // Standard Accept
+      const updateSql =
+        "UPDATE session SET sessionStatus = 'Accepted', tutorNote = ? WHERE sessionId = ?";
+      db.query(updateSql, [tutorNote || null, sessionId], async (err5) => {
+        if (err5)
+          return res
+            .status(500)
+            .json({ success: false, message: err5.message });
 
-          const hasCredit = stuRows[0]?.freeSessionCredit;
+        try {
+          await sendEmail(
+            studentEmail,
+            "Session Request Accepted",
+            `<p>Your session request has been accepted. Please proceed to payment.</p>`,
+          );
+        } catch (e) {
+          console.error("Email sending failed", e);
+        }
 
-          if (hasCredit) {
-            // Redeem Credit: Mark as Paid immediately
-            const zoomUrl = `https://meet.jit.si/session_${sessionId}_${Date.now()}`;
-            const txnId = `CREDIT-${Date.now()}`;
-
-            // 1. Update Session
-            const updateSessionSql =
-              "UPDATE session SET sessionStatus = 'Paid', zoomUrl = ? WHERE sessionId = ?";
-            db.query(updateSessionSql, [zoomUrl, sessionId], (err4) => {
-              if (err4)
-                return res
-                  .status(500)
-                  .json({ success: false, message: err4.message });
-
-              // 2. Update Student Credit
-              const updateStudentSql =
-                "UPDATE student SET freeSessionCredit = 0 WHERE userId = ?";
-              db.query(updateStudentSql, [studentId], (err5) => {
-                if (err5) console.error("Failed to reset student credit", err5);
-
-                // 3. Insert Payment
-                const insertPaymentSql = `
-                    INSERT INTO payment (sessionId, amount, currency, paymentStatus, paymentMethod, provider, transactionId) 
-                    VALUES (?, 0, 'LKR', 'Paid', 'Credit', 'System', ?)
-                  `;
-                db.query(insertPaymentSql, [sessionId, txnId], async (err6) => {
-                  if (err6)
-                    console.error(
-                      "Failed to insert credit payment record",
-                      err6,
-                    );
-
-                  // Notify Student
-                  await sendEmail(
-                    studentEmail,
-                    "Session Accepted & Credit Applied",
-                    `<p>Your session has been accepted. Your free session credit was applied automatically.</p>
-                        <p>Meeting Link: <a href="${zoomUrl}">${zoomUrl}</a></p>`,
-                  );
-
-                  return res.json({
-                    success: true,
-                    message: "Session accepted and credit applied.",
-                  });
-                });
-              });
-            });
-          } else {
-            // Standard Accept
-            const updateSql =
-              "UPDATE session SET sessionStatus = 'Accepted', tutorNote = ? WHERE sessionId = ?";
-            db.query(
-              updateSql,
-              [tutorNote || null, sessionId],
-              async (err5) => {
-                if (err5)
-                  return res
-                    .status(500)
-                    .json({ success: false, message: err5.message });
-
-                try {
-                  await sendEmail(
-                    studentEmail,
-                    "Session Request Accepted",
-                    `<p>Your session request has been accepted. Please proceed to payment.</p>`,
-                  );
-                } catch (e) {
-                  console.error("Email sending failed", e);
-                }
-
-                return res.json({
-                  success: true,
-                  message: "Session accepted successfully",
-                });
-              },
-            );
-          }
-        },
-      );
+        return res.json({
+          success: true,
+          message: "Session accepted successfully",
+        });
+      });
     }
 
     // --- DECLINE LOGIC ---
