@@ -341,11 +341,15 @@ sessionRouter.put("/:sessionId/status", (req, res) => {
                     .status(500)
                     .json({ success: false, message: err5.message });
 
-                await sendEmail(
-                  studentEmail,
-                  "Session Request Accepted",
-                  `<p>Your session request has been accepted. Please proceed to payment.</p>`,
-                );
+                try {
+                  await sendEmail(
+                    studentEmail,
+                    "Session Request Accepted",
+                    `<p>Your session request has been accepted. Please proceed to payment.</p>`,
+                  );
+                } catch (e) {
+                  console.error("Email sending failed", e);
+                }
 
                 return res.json({
                   success: true,
