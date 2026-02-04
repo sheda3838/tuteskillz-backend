@@ -11,7 +11,7 @@ const db = mysql.createConnection({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   ssl: {
-    ca: fs.readFileSync(process.env.CA),
+    ca: fs.readFileSync(process.env.CA), //un commented line
   },
 });
 
