@@ -1,0 +1,11 @@
+Field | Type | Null | Default
+paymentId | int(11) | NO | null
+amount | int(11) | NO | null
+paymentStatus | enum('Paid','Refunded') | NO | null
+paymentMethod | varchar(50) | NO | null
+paidAt | datetime | NO | CURRENT_TIMESTAMP
+sessionId | int(11) | NO | null
+slip | longblob | YES | null
+currency | varchar(10) | YES | LKR
+provider | varchar(50) | YES | Stripe
+transactionId | varchar(255) | YES | null
