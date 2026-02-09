@@ -19,13 +19,8 @@ export const sendEmail = async (to, subject, html) => {
   };
 
   try {
-    // await sgMail.send(msg);
-    console.log(
-      "Email sending skipped (Credits exceeded workaround):",
-      subject,
-      "to",
-      to
-    );
+    await sgMail.send(msg);
+    console.log("Email sent successfully to:", to);
   } catch (err) {
     console.error("Failed to send email:", err);
     throw err;
