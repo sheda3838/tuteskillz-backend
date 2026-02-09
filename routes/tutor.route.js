@@ -510,6 +510,7 @@ tutorRouter.get("/dashboard/:tutorId", (req, res) => {
     LEFT JOIN payment p ON s.sessionId = p.sessionId AND p.paymentStatus = 'Paid'
     WHERE ts.tutorId = ? AND s.sessionStatus = 'Completed'
     GROUP BY sub.subjectName
+    ORDER BY avgRating DESC
   `;
 
   // 2. Booking Trends (Last 7 Days)
